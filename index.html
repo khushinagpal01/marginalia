@@ -580,7 +580,7 @@ Respond with ONLY a valid JSON object, no markdown code fences, no text before o
 {"techniques":[{"name":"","quote":"","mechanism":"","reactance_risk":"","reactance_note":"","alternatives":["",""]}],"density":{"level":"","note":""},"gaps":[{"technique":"","note":""}],"summary":""}`;
 
   try{
-    const response = await fetch("/api/analyze", {
+    const response = await fetch("/.netlify/functions/analyze", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ prompt })
