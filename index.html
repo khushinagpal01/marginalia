@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Marginalia — a persuasion audit for your copy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Newsreader:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EDEBE6;
+    --paper-raised:#F5F3EF;
+    --ink:#22252A;
+    --ink-soft:#5B5E62;
+    --rule:#CDC8BC;
+    --teal:#2F6E68;
+    --ochre:#A9812E;
+    --plum:#6B3550;
+    --teal-tint:rgba(47,110,104,0.09);
+    --ochre-tint:rgba(169,129,46,0.12);
+    --plum-tint:rgba(107,53,80,0.10);
+  }
+  *{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Newsreader', serif;
+    line-height:1.55;
+    padding:0 20px 80px;
+  }
+  .wrap{max-width:980px;margin:0 auto;}
+  header{
+    padding:56px 0 28px;
+    border-bottom:1px solid var(--rule);
+    margin-bottom:40px;
+  }
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    margin-bottom:14px;
+  }
+  h1{
+    font-family:'Fraunces', serif;
+    font-weight:500;
+    font-size:clamp(34px, 5.5vw, 52px);
+    margin:0 0 12px;
+    letter-spacing:-0.01em;
+  }
+  h1 em{font-style:italic; font-weight:400; color:var(--teal);}
+  .sub{
+    font-size:17px;
+    color:var(--ink-soft);
+    max-width:560px;
+    margin:0;
+  }
+
+  /* Input state */
+  .panel{
+    background:var(--paper-raised);
+    border:1px solid var(--rule);
+    border-radius:2px;
+    padding:32px;
+  }
+  label.field-label{
+    display:block;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    margin-bottom:12px;
+  }
+  textarea{
+    width:100%;
+    min-height:180px;
+    resize:vertical;
+    background:var(--paper);
+    border:1px solid var(--rule);
+    border-radius:2px;
+    padding:18px;
+    font-family:'Newsreader', serif;
+    font-size:17px;
+    line-height:1.6;
+    color:var(--ink);
+  }
+  textarea:focus, button:focus-visible, .alt-copy:focus-visible{
+    outline:2px solid var(--teal);
+    outline-offset:2px;
+  }
+  .field-foot{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:10px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11.5px;
+    color:var(--ink-soft);
+  }
+  .actions{
+    display:flex;
+    gap:14px;
+    align-items:center;
+    margin-top:22px;
+    flex-wrap:wrap;
+  }
+  button{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12.5px;
+    letter-spacing:0.05em;
+    text-transform:uppercase;
+    border-radius:2px;
+    cursor:pointer;
+    transition:background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  }
+  .btn-primary{
+    background:var(--ink);
+    color:var(--paper);
+    border:1px solid var(--ink);
+    padding:13px 26px;
+  }
+  .btn-primary:hover:not(:disabled){background:var(--teal); border-color:var(--teal);}
+  .btn-primary:disabled{opacity:0.4; cursor:not-allowed;}
+  .btn-ghost{
+    background:transparent;
+    color:var(--ink-soft);
+    border:1px solid var(--rule);
+    padding:12px 20px;
+  }
+  .btn-ghost:hover{border-color:var(--ink-soft); color:var(--ink);}
+
+  /* Loading */
+  .loading{
+    display:none;
+    align-items:center;
+    gap:12px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12.5px;
+    color:var(--ink-soft);
+    margin-top:20px;
+  }
+  .loading.active{display:flex;}
+  .dot{
+    width:6px; height:6px; border-radius:50%;
+    background:var(--teal);
+    animation:pulse 1.1s ease-in-out infinite;
+  }
+  .dot:nth-child(2){animation-delay:0.15s;}
+  .dot:nth-child(3){animation-delay:0.3s;}
+  @keyframes pulse{0%,100%{opacity:0.25;} 50%{opacity:1;}}
+
+  .error-box{
+    display:none;
+    margin-top:20px;
+    padding:16px 18px;
+    border:1px solid var(--plum);
+    background:var(--plum-tint);
+    color:var(--plum);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:13px;
+    border-radius:2px;
+  }
+  .error-box.active{display:block;}
+
+  /* Results */
+  #results{display:none; margin-top:48px;}
+  #results.active{display:block;}
+
+  .density-strip{
+    display:flex;
+    align-items:center;
+    gap:18px;
+    padding:20px 24px;
+    background:var(--paper-raised);
+    border:1px solid var(--rule);
+    border-radius:2px;
+    margin-bottom:36px;
+    flex-wrap:wrap;
+  }
+  .density-label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    white-space:nowrap;
+  }
+  .density-meter{display:flex; gap:4px;}
+  .density-seg{
+    width:34px; height:8px;
+    border:1px solid var(--rule);
+    border-radius:1px;
+    background:transparent;
+  }
+  .density-seg.fill-low{background:var(--teal); border-color:var(--teal);}
+  .density-seg.fill-medium{background:var(--ochre); border-color:var(--ochre);}
+  .density-seg.fill-high{background:var(--plum); border-color:var(--plum);}
+  .density-note{font-size:14.5px; color:var(--ink-soft); flex:1; min-width:220px;}
+
+  .grid{
+    display:grid;
+    grid-template-columns:1.35fr 1fr;
+    gap:40px;
+    align-items:start;
+  }
+  @media (max-width:780px){
+    .grid{grid-template-columns:1fr;}
+  }
+
+  .manuscript-head, .annot-head{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    margin-bottom:16px;
+    padding-bottom:10px;
+    border-bottom:1px solid var(--rule);
+  }
+  .manuscript{
+    font-size:18px;
+    line-height:1.75;
+    white-space:pre-wrap;
+  }
+  .manuscript mark{
+    background:transparent;
+    color:inherit;
+    padding:0 1px;
+    border-bottom:2px solid;
+  }
+  .manuscript mark.risk-low{background:var(--teal-tint); border-color:var(--teal);}
+  .manuscript mark.risk-medium{background:var(--ochre-tint); border-color:var(--ochre);}
+  .manuscript mark.risk-high{background:var(--plum-tint); border-color:var(--plum);}
+  .manuscript sup{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10px;
+    margin-left:2px;
+    color:var(--paper);
+    background:var(--ink);
+    padding:1px 4px;
+    border-radius:8px;
+    font-style:normal;
+  }
+  .manuscript mark.risk-low sup{background:var(--teal);}
+  .manuscript mark.risk-medium sup{background:var(--ochre);}
+  .manuscript mark.risk-high sup{background:var(--plum);}
+
+  .annot-list{display:flex; flex-direction:column; gap:18px;}
+  .card{
+    border:1px solid var(--rule);
+    background:var(--paper-raised);
+    border-radius:2px;
+    padding:18px 20px;
+  }
+  .card-top{
+    display:flex;
+    align-items:baseline;
+    gap:10px;
+    margin-bottom:8px;
+  }
+  .card-num{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    color:var(--paper);
+    background:var(--ink);
+    border-radius:8px;
+    padding:1px 6px;
+  }
+  .card-num.risk-low{background:var(--teal);}
+  .card-num.risk-medium{background:var(--ochre);}
+  .card-num.risk-high{background:var(--plum);}
+  .card-name{
+    font-family:'Fraunces', serif;
+    font-weight:500;
+    font-size:17px;
+  }
+  .risk-tag{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    color:var(--ink-soft);
+    margin-left:auto;
+  }
+  .card p{margin:6px 0; font-size:14.5px; color:var(--ink-soft);}
+  .card .mechanism{color:var(--ink);}
+  .paraphrase-note{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10.5px;
+    color:var(--ink-soft);
+    font-style:italic;
+  }
+  .alts{margin-top:10px; padding-top:10px; border-top:1px dashed var(--rule);}
+  .alts-label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    margin-bottom:8px;
+  }
+  .alt-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:10px;
+    font-size:14.5px;
+    padding:7px 0;
+  }
+  .alt-copy{
+    background:transparent;
+    border:1px solid var(--rule);
+    color:var(--ink-soft);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10px;
+    text-transform:uppercase;
+    padding:5px 9px;
+    border-radius:2px;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .alt-copy:hover{border-color:var(--teal); color:var(--teal);}
+
+  .gaps{
+    margin-top:44px;
+    border:1px dashed var(--rule);
+    padding:24px 26px;
+    border-radius:2px;
+  }
+  .gaps-head{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    margin-bottom:14px;
+  }
+  .gap-item{margin-bottom:12px; font-size:15px;}
+  .gap-item b{font-family:'Fraunces', serif; font-weight:500; font-style:italic;}
+  .gap-item span{color:var(--ink-soft);}
+
+  .summary{
+    margin-top:36px;
+    font-family:'Fraunces', serif;
+    font-style:italic;
+    font-size:19px;
+    line-height:1.55;
+    color:var(--ink);
+    max-width:680px;
+  }
+
+  .disclaimer{
+    margin-top:40px;
+    padding-top:20px;
+    border-top:1px solid var(--rule);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11.5px;
+    color:var(--ink-soft);
+    line-height:1.6;
+  }
+
+  .reset-row{margin-top:32px;}
+
+  .lead-capture{
+    margin-top:40px;
+    padding:26px 28px;
+    background:var(--paper-raised);
+    border:1px solid var(--rule);
+    border-radius:2px;
+  }
+  .lead-capture .annot-head{margin-bottom:14px;}
+  .lead-capture p{
+    font-size:14.5px;
+    color:var(--ink-soft);
+    margin:0 0 16px;
+    max-width:520px;
+  }
+  .lead-row{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    align-items:center;
+  }
+  .lead-row input[type="email"]{
+    flex:1;
+    min-width:220px;
+    background:var(--paper);
+    border:1px solid var(--rule);
+    border-radius:2px;
+    padding:11px 14px;
+    font-family:'Newsreader', serif;
+    font-size:15px;
+    color:var(--ink);
+  }
+  .lead-checkbox{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    color:var(--ink-soft);
+    margin-top:14px;
+  }
+  .lead-checkbox input{width:15px; height:15px;}
+  .lead-status{
+    margin-top:12px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    color:var(--teal);
+    min-height:16px;
+  }
+  .lead-status.error-status{color:var(--plum);}
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none !important; transition:none !important;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">A persuasion audit, not a copy generator</div>
+    <h1>Margin<em>alia</em></h1>
+    <p class="sub">Paste in ad copy, a product description, or a landing page paragraph. See which behavioural techniques it's using, how a skeptical reader might take them, and a couple of other ways to say the same thing.</p>
+  </header>
+
+  <div class="panel" id="inputPanel">
+    <label class="field-label" for="copyInput">Your copy</label>
+    <textarea id="copyInput" placeholder="Paste the copy you want to look closely at — a headline, an ad, a product page, an email…" maxlength="4000"></textarea>
+    <div class="field-foot">
+      <span id="charCount">0 / 4000</span>
+      <span>Works best on 40–400 words</span>
+    </div>
+    <div class="actions">
+      <button class="btn-primary" id="analyzeBtn">Read closely</button>
+      <button class="btn-ghost" id="exampleBtn">Try an example instead</button>
+    </div>
+    <div class="loading" id="loadingState">
+      <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+      <span>Reading line by line…</span>
+    </div>
+    <div class="error-box" id="errorBox"></div>
+  </div>
+
+  <div id="results" aria-live="polite">
+    <div class="density-strip">
+      <span class="density-label">Stacking</span>
+      <div class="density-meter" id="densityMeter">
+        <div class="density-seg" data-level="low"></div>
+        <div class="density-seg" data-level="medium"></div>
+        <div class="density-seg" data-level="high"></div>
+      </div>
+      <span class="density-note" id="densityNote"></span>
+    </div>
+
+    <div class="grid">
+      <div>
+        <div class="manuscript-head">Your copy, marked up</div>
+        <div class="manuscript" id="manuscript"></div>
+      </div>
+      <div>
+        <div class="annot-head">What's in play</div>
+        <div class="annot-list" id="annotList"></div>
+      </div>
+    </div>
+
+    <div class="gaps" id="gapsSection">
+      <div class="gaps-head">Worth considering — not currently used</div>
+      <div id="gapsList"></div>
+    </div>
+
+    <p class="summary" id="summaryText"></p>
+
+    <div class="lead-capture">
+      <div class="annot-head">Get this as a PDF</div>
+      <p>Enter your email and download this audit as a PDF. You'll be added to a private list I use only to reach out about this tool and related things I build — nothing else.</p>
+      <div class="lead-row">
+        <input type="email" id="leadEmail" placeholder="you@company.com" autocomplete="email">
+        <button class="btn-primary" id="sendPdfBtn">Download now</button>
+      </div>
+      <label class="lead-checkbox">
+        <input type="checkbox" id="notifyCheckbox">
+        Also notify me when new detectors are added
+      </label>
+      <div class="lead-status" id="leadStatus"></div>
+    </div>
+
+    <div class="reset-row">
+      <button class="btn-ghost" id="resetBtn">Audit something else</button>
+    </div>
+
+    <div class="disclaimer">
+      This flags patterns and offers alternate phrasings to weigh — it doesn't predict which version will convert better. Persuasion is contextual; the only way to know what works on your actual audience is to test it on them.
+    </div>
+  </div>
+
+  <!-- Hidden so Netlify's build step detects this form and stores submissions in your site dashboard -->
+  <form name="marginalia-leads" data-netlify="true" netlify-honeypot="bot-field" hidden>
+    <input type="text" name="bot-field">
+    <input type="email" name="email">
+    <input type="text" name="notify_new_detectors">
+  </form>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+const copyInput = document.getElementById('copyInput');
+const charCount = document.getElementById('charCount');
+const analyzeBtn = document.getElementById('analyzeBtn');
+const exampleBtn = document.getElementById('exampleBtn');
+const loadingState = document.getElementById('loadingState');
+const errorBox = document.getElementById('errorBox');
+const inputPanel = document.getElementById('inputPanel');
+const results = document.getElementById('results');
+const resetBtn = document.getElementById('resetBtn');
+
+const EXAMPLE_COPY = "Only 47 left in stock — and at this price, we can't promise it'll last the week. Over 12,000 customers have already made the switch, and 94% say they'd never go back to their old routine. Join them today and lock in founder pricing before it disappears for good.";
+
+copyInput.addEventListener('input', () => {
+  charCount.textContent = copyInput.value.length + ' / 4000';
+});
+
+exampleBtn.addEventListener('click', () => {
+  copyInput.value = EXAMPLE_COPY;
+  charCount.textContent = copyInput.value.length + ' / 4000';
+  runAnalysis();
+});
+
+analyzeBtn.addEventListener('click', runAnalysis);
+
+resetBtn.addEventListener('click', () => {
+  results.classList.remove('active');
+  inputPanel.style.display = 'block';
+  copyInput.value = '';
+  charCount.textContent = '0 / 4000';
+  copyInput.focus();
+  window.scrollTo({top: 0, behavior: 'smooth'});
+});
+
+function escapeHtml(str){
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+async function runAnalysis(){
+  const text = copyInput.value.trim();
+  if(!text){ copyInput.focus(); return; }
+
+  errorBox.classList.remove('active');
+  loadingState.classList.add('active');
+  analyzeBtn.disabled = true;
+  exampleBtn.disabled = true;
+
+  const prompt = `You are a behavioural science analyst auditing a piece of marketing or persuasive copy that a professional pasted into an audit tool. Analyze ONLY the copy given below. Identify the persuasion and behavioural-science techniques actually at work in it.
+
+COPY TO ANALYZE:
+"""
+${text}
+"""
+
+For each technique you find (report at most 6, the most salient ones — quality over completeness):
+- name: the standard behavioural science name (e.g. Scarcity, Social Proof, Anchoring, Loss Aversion, Authority, Reciprocity, Commitment and Consistency, Framing Effect, Decoy Effect, Urgency, Endowment Effect, Default Effect, Bandwagon Effect)
+- quote: the exact short phrase from the copy (word-for-word, under 12 words) that shows this technique
+- mechanism: one plain sentence on how it works psychologically
+- reactance_risk: "low", "medium", or "high" — how likely a skeptical, savvy reader is to feel manipulated by THIS SPECIFIC INSTANCE (not the technique in the abstract; consider how overt or heavy-handed the wording is)
+- reactance_note: one short sentence explaining the reactance_risk rating
+- alternatives: exactly 2 short alternate phrasings for that same spot in the copy. Alternative 1 should keep the same technique but soften its intensity. Alternative 2 should swap to a different, gentler technique. Do not claim either performs better — just offer them as different options.
+
+Also assess:
+- density: level ("low", "medium", or "high") for how compressed/stacked the techniques are overall, plus a one-sentence note on what that stacking might do to a skeptical reader
+- gaps: up to 3 well-established techniques NOT present in the copy that could be worth testing. For each, give "technique" and a one-sentence "note" framed exploratively (e.g. "could be worth testing" not "will improve results")
+- summary: 2-3 plain sentences, no hype, no performance promises, just an honest read of what's going on in this copy
+
+Respond with ONLY a valid JSON object, no markdown code fences, no text before or after, matching exactly this shape:
+{"techniques":[{"name":"","quote":"","mechanism":"","reactance_risk":"","reactance_note":"","alternatives":["",""]}],"density":{"level":"","note":""},"gaps":[{"technique":"","note":""}],"summary":""}`;
+
+  try{
+    const response = await fetch("/api/analyze", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt })
+    });
+
+    if(!response.ok){
+      throw new Error("The request didn't go through (status " + response.status + ").");
+    }
+
+    const data = await response.json();
+    const textBlocks = (data.content || []).filter(b => b.type === "text").map(b => b.text).join("\n");
+    const cleaned = textBlocks.replace(/```json/g, "").replace(/```/g, "").trim();
+    const parsed = JSON.parse(cleaned);
+
+    renderResults(text, parsed);
+    inputPanel.style.display = 'none';
+    results.classList.add('active');
+    window.scrollTo({top: 0, behavior: 'smooth'});
+
+  } catch(err){
+    errorBox.textContent = "Couldn't complete that read: " + err.message + " — try again in a moment.";
+    errorBox.classList.add('active');
+  } finally {
+    loadingState.classList.remove('active');
+    analyzeBtn.disabled = false;
+    exampleBtn.disabled = false;
+  }
+}
+
+let lastOriginalText = '';
+let lastAnalysisData = null;
+
+function renderResults(originalText, data){
+  lastOriginalText = originalText;
+  lastAnalysisData = data;
+  const techniques = Array.isArray(data.techniques) ? data.techniques : [];
+
+  // find ranges for each technique's quote in the original text
+  const lowerOriginal = originalText.toLowerCase();
+  const found = techniques.map((t, i) => {
+    const q = (t.quote || '').trim();
+    if(!q) return {...t, idx:i, start:-1, end:-1};
+    const start = lowerOriginal.indexOf(q.toLowerCase());
+    return {...t, idx:i, start, end: start === -1 ? -1 : start + q.length};
+  });
+
+  // build manuscript with non-overlapping ranges, sorted by position
+  const withRanges = found.filter(f => f.start !== -1).sort((a,b) => a.start - b.start);
+  const nonOverlapping = [];
+  let lastEnd = -1;
+  withRanges.forEach(f => {
+    if(f.start >= lastEnd){
+      nonOverlapping.push(f);
+      lastEnd = f.end;
+    }
+  });
+
+  let cursor = 0;
+  let html = '';
+  nonOverlapping.forEach(f => {
+    html += escapeHtml(originalText.slice(cursor, f.start));
+    const riskClass = 'risk-' + (f.reactance_risk || 'low');
+    html += `<mark class="${riskClass}" id="mark-${f.idx}">${escapeHtml(originalText.slice(f.start, f.end))}<sup>${f.idx+1}</sup></mark>`;
+    cursor = f.end;
+  });
+  html += escapeHtml(originalText.slice(cursor));
+  document.getElementById('manuscript').innerHTML = html || escapeHtml(originalText);
+
+  // annotation cards, in original technique order
+  const annotList = document.getElementById('annotList');
+  annotList.innerHTML = '';
+  found.forEach(f => {
+    const riskClass = 'risk-' + (f.reactance_risk || 'low');
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.id = 'card-' + f.idx;
+    const altsHtml = (f.alternatives || []).map(a =>
+      `<div class="alt-row"><span>${escapeHtml(a)}</span><button class="alt-copy" data-text="${escapeHtml(a)}">Copy</button></div>`
+    ).join('');
+    card.innerHTML = `
+      <div class="card-top">
+        <span class="card-num ${riskClass}">${f.idx+1}</span>
+        <span class="card-name">${escapeHtml(f.name||'')}</span>
+        <span class="risk-tag">${escapeHtml(f.reactance_risk||'')} risk</span>
+      </div>
+      <p class="mechanism">${escapeHtml(f.mechanism||'')}</p>
+      <p>${escapeHtml(f.reactance_note||'')}</p>
+      ${f.start === -1 ? '<p class="paraphrase-note">paraphrased — not a verbatim line in your copy</p>' : ''}
+      <div class="alts">
+        <div class="alts-label">Other ways to say it</div>
+        ${altsHtml}
+      </div>
+    `;
+    annotList.appendChild(card);
+  });
+
+  annotList.querySelectorAll('.alt-copy').forEach(btn => {
+    btn.addEventListener('click', () => {
+      navigator.clipboard.writeText(btn.dataset.text).then(() => {
+        const orig = btn.textContent;
+        btn.textContent = 'Copied';
+        setTimeout(() => btn.textContent = orig, 1200);
+      });
+    });
+  });
+
+  // density meter
+  const level = (data.density && data.density.level) ? data.density.level.toLowerCase() : 'low';
+  document.querySelectorAll('.density-seg').forEach(seg => {
+    seg.classList.remove('fill-low','fill-medium','fill-high');
+    const segLevel = seg.dataset.level;
+    const order = {low:1, medium:2, high:3};
+    if(order[segLevel] <= order[level]) seg.classList.add('fill-' + level);
+  });
+  document.getElementById('densityNote').textContent = (data.density && data.density.note) || '';
+
+  // gaps
+  const gapsList = document.getElementById('gapsList');
+  gapsList.innerHTML = '';
+  (data.gaps || []).forEach(g => {
+    const div = document.createElement('div');
+    div.className = 'gap-item';
+    div.innerHTML = `<b>${escapeHtml(g.technique||'')}</b> — <span>${escapeHtml(g.note||'')}</span>`;
+    gapsList.appendChild(div);
+  });
+  document.getElementById('gapsSection').style.display = (data.gaps && data.gaps.length) ? 'block' : 'none';
+
+  // summary
+  document.getElementById('summaryText').textContent = data.summary || '';
+}
+
+function buildAnalysisPdf(originalText, data){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  const pageWidth = 180;
+  let y = 20;
+
+  function ensureRoom(lines){
+    if (y + lines * 5 > 280){ doc.addPage(); y = 20; }
+  }
+
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(18);
+  doc.text('Marginalia — Persuasion Audit', 15, y); y += 8;
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(110);
+  doc.text(new Date().toLocaleDateString(), 15, y); y += 10;
+  doc.setTextColor(20);
+
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(12);
+  doc.text('Summary', 15, y); y += 6;
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(10);
+  const summaryLines = doc.splitTextToSize(data.summary || '', pageWidth);
+  ensureRoom(summaryLines.length); doc.text(summaryLines, 15, y); y += summaryLines.length * 5 + 8;
+
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(12);
+  ensureRoom(2); doc.text('Stacking: ' + ((data.density && data.density.level) || '—'), 15, y); y += 6;
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(10);
+  const densityLines = doc.splitTextToSize((data.density && data.density.note) || '', pageWidth);
+  ensureRoom(densityLines.length); doc.text(densityLines, 15, y); y += densityLines.length * 5 + 8;
+
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(12);
+  ensureRoom(2); doc.text('Techniques found', 15, y); y += 7;
+
+  (data.techniques || []).forEach((t, i) => {
+    ensureRoom(3);
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(11);
+    doc.text(`${i + 1}. ${t.name || ''} — ${t.reactance_risk || ''} risk`, 15, y); y += 6;
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
+    const quoteLines = doc.splitTextToSize(`"${t.quote || ''}" — ${t.mechanism || ''}`, pageWidth);
+    ensureRoom(quoteLines.length); doc.text(quoteLines, 15, y); y += quoteLines.length * 4.5 + 3;
+    const noteLines = doc.splitTextToSize(t.reactance_note || '', pageWidth);
+    ensureRoom(noteLines.length); doc.text(noteLines, 15, y); y += noteLines.length * 4.5 + 3;
+    (t.alternatives || []).forEach(a => {
+      const altLines = doc.splitTextToSize('Alternative: ' + a, pageWidth - 5);
+      ensureRoom(altLines.length); doc.text(altLines, 20, y); y += altLines.length * 4.5 + 2;
+    });
+    y += 4;
+  });
+
+  if ((data.gaps || []).length){
+    ensureRoom(3);
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(12);
+    doc.text('Worth considering', 15, y); y += 6;
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(10);
+    data.gaps.forEach(g => {
+      const gapLines = doc.splitTextToSize(`${g.technique || ''}: ${g.note || ''}`, pageWidth);
+      ensureRoom(gapLines.length); doc.text(gapLines, 15, y); y += gapLines.length * 5 + 3;
+    });
+  }
+
+  return doc;
+}
+
+function submitLeadToNetlify(email, notify){
+  const body = new URLSearchParams({
+    'form-name': 'marginalia-leads',
+    email: email,
+    notify_new_detectors: notify ? 'yes' : 'no'
+  }).toString();
+  return fetch('/', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: body
+  });
+}
+
+const leadEmail = document.getElementById('leadEmail');
+const notifyCheckbox = document.getElementById('notifyCheckbox');
+const sendPdfBtn = document.getElementById('sendPdfBtn');
+const leadStatus = document.getElementById('leadStatus');
+
+sendPdfBtn.addEventListener('click', async () => {
+  const email = leadEmail.value.trim();
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailPattern.test(email)){
+    leadStatus.textContent = 'Enter a valid email first.';
+    leadStatus.classList.add('error-status');
+    return;
+  }
+  leadStatus.classList.remove('error-status');
+  leadStatus.textContent = 'Working on it…';
+  sendPdfBtn.disabled = true;
+
+  try{
+    // 1. Build and download the PDF immediately
+    const doc = buildAnalysisPdf(lastOriginalText, lastAnalysisData);
+    doc.save('marginalia-audit.pdf');
+
+    // 2. Store the email privately via Netlify Forms — shows up in your site's Forms dashboard,
+    //    which updates itself automatically as new people submit, no refresh or extra step needed
+    await submitLeadToNetlify(email, notifyCheckbox.checked);
+
+    leadStatus.textContent = 'Downloaded — you\'re on the list.';
+  } catch(err){
+    leadStatus.textContent = 'Something went wrong: ' + err.message;
+    leadStatus.classList.add('error-status');
+  } finally {
+    sendPdfBtn.disabled = false;
+  }
+});
+</script>
+</body>
+</html>
