@@ -102,6 +102,34 @@
     font-size:11.5px;
     color:var(--ink-soft);
   }
+  .scope-hint{
+    margin:14px 0 0;
+    font-size:13.5px;
+    line-height:1.55;
+    color:var(--ink-soft);
+    padding:12px 14px;
+    background:var(--paper);
+    border:1px solid var(--rule);
+    border-radius:2px;
+  }
+  .example-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-top:14px;
+  }
+  .example-label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.05em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+  }
+  .btn-small{
+    padding:8px 14px;
+    font-size:11px;
+  }
   .actions{
     display:flex;
     gap:14px;
@@ -427,7 +455,7 @@
   <header>
     <div class="eyebrow">A persuasion audit, not a copy generator</div>
     <h1>Margin<em>alia</em></h1>
-    <p class="sub">Paste in ad copy, a product description, or a landing page paragraph. See which behavioural techniques it's using, how a skeptical reader might take them, and a couple of other ways to say the same thing.</p>
+    <p class="sub">Paste in copy that's actually trying to sell or convince someone — an ad, a landing page, a checkout page, a cold email. See which classic persuasion techniques it's using, how a skeptical reader might take them, and other ways to say the same thing.</p>
   </header>
 
   <div class="panel" id="inputPanel">
@@ -437,9 +465,15 @@
       <span id="charCount">0 / 4000</span>
       <span>Works best on 40–400 words</span>
     </div>
+    <p class="scope-hint">Looks for: pricing &amp; guarantees · urgency &amp; scarcity · customer counts &amp; testimonials · comparisons &amp; identity appeals. The more it reads like a sales pitch, the more it finds — plain, neutral text often won't trigger much, and that's correct, not broken.</p>
     <div class="actions">
       <button class="btn-primary" id="analyzeBtn">Read closely</button>
-      <button class="btn-ghost" id="exampleBtn">Try an example instead</button>
+    </div>
+    <div class="example-row">
+      <span class="example-label">Or see it work on:</span>
+      <button class="btn-ghost btn-small" id="exampleEcom">an ecommerce ad</button>
+      <button class="btn-ghost btn-small" id="exampleSaas">a SaaS pricing page</button>
+      <button class="btn-ghost btn-small" id="exampleCourse">a course launch email</button>
     </div>
     <div class="loading" id="loadingState">
       <span class="dot"></span><span class="dot"></span><span class="dot"></span>
@@ -528,13 +562,13 @@ window.MARGINALIA_PRINCIPLES = [
   {
     id: 'scarcity', name: 'Scarcity', category: 'pressure', reactanceBase: 2,
     mechanism: "People assign more value to things perceived as limited in availability, since scarcity implies competition for the item and raises the felt cost of missing out.",
-    patterns: [/\bonly\s+\d+\s+(left|remaining|in stock)\b/i, /\blimited\s+(stock|quantity|supply|availability)\b/i, /\bwhile\s+supplies\s+last\b/i, /\bfew\s+(left|remaining)\b/i, /\bselling\s+(fast|out)\b/i, /\bdown\s+to\s+(our|the)\s+last\b/i, /\brunning\s+low\s+on\b/i, /\balmost\s+sold\s+out\b/i, /\bnearly\s+gone\b/i],
+    patterns: [/\bonly\s+\d+\s+(\w+\s+)?(left|remaining|in stock)\b/i, /\blimited\s+(stock|quantity|supply|availability)\b/i, /\bwhile\s+supplies\s+last\b/i, /\bfew\s+(left|remaining)\b/i, /\bselling\s+(fast|out)\b/i, /\bdown\s+to\s+(our|the)\s+last\b/i, /\brunning\s+low\s+on\b/i, /\balmost\s+sold\s+out\b/i, /\bnearly\s+gone\b/i],
     rewrites: ["{n} left, updated as they sell", "Limited stock — worth checking current availability", "This batch is smaller than usual", "Stock is finite, though there's no need to rush", "Available while the current supply lasts", "Selling steadily — worth checking if it's still around"]
   },
   {
     id: 'urgency', name: 'Urgency', category: 'pressure', reactanceBase: 2,
     mechanism: "Framing a decision as time-limited pushes people to decide quickly, before they've fully weighed the choice, since deliberation feels risky when a window is closing.",
-    patterns: [/\bact\s+now\b/i, /\bdon't\s+miss\s+out\b/i, /\bhurry\b/i, /\blast\s+chance\b/i, /\bends\s+(tonight|today|soon)\b/i, /\btime\s+is\s+running\s+out\b/i, /\bbefore\s+time\s+runs\s+out\b/i, /\bdon't\s+wait\s+(too\s+long|around)\b/i, /\bwon't\s+last\s+long\b/i],
+    patterns: [/\bact\s+now\b/i, /\bdon't\s+miss\s+out\b/i, /\bhurry\b/i, /\blast\s+chance\b/i, /\bends\s+(tonight|today|soon)\b/i, /\btime\s+is\s+running\s+out\b/i, /\bbefore\s+time\s+runs\s+out\b/i, /\bdon't\s+wait\s+(too\s+long|around)\b/i, /\bwon't\s+last\s+long\b/i, /\blimited[- ]time\b/i],
     rewrites: ["No countdown — just a heads up this won't stay open indefinitely", "Worth deciding on your own timeline, though it's not open forever", "Closes this week", "A gentle deadline, not a countdown clock", "Take the time you need — this just isn't indefinite", "Closing soon, not closing this second"]
   },
   {
@@ -578,7 +612,7 @@ window.MARGINALIA_PRINCIPLES = [
   {
     id: 'numeric-social-proof', name: 'Numeric Social Proof', category: 'social', reactanceBase: 1,
     mechanism: "A precise number feels more credible than a vague claim of popularity, and large specific numbers signal that many independent people made the same choice.",
-    patterns: [/\b\d{2,}[,\d]*\+?\s+(customers|users|members|subscribers|downloads)\b/i, /\b\d{1,3}%\s+of\s+(customers|users)\b/i],
+    patterns: [/\b\d[\d,]*\+?\s+(customers|users|members|subscribers|downloads)\b/i, /\b\d{1,3}%\s+of\s+(customers|users)\b/i],
     rewrites: ["{n}, and counting", "A specific, checkable number of users", "Figures updated as they grow, not a static claim", "An exact count, not a rounded estimate", "The number is public and can be verified", "Growing by a measurable, stated amount"]
   },
   {
@@ -592,7 +626,7 @@ window.MARGINALIA_PRINCIPLES = [
   {
     id: 'authority', name: 'Authority', category: 'trust', reactanceBase: 1,
     mechanism: "People defer to perceived authority or official-sounding status, which can shortcut critical evaluation of the underlying claim.",
-    patterns: [/\bofficially\s+(certified|approved|recognized)\b/i, /\bindustry[- ]leading\b/i, /\b#1\s+(rated|ranked)\b/i, /\baward[- ]winning\b/i],
+    patterns: [/\bofficially\s+(certified|approved|recognized)\b/i, /\bindustry[- ]leading\b/i, /#1\s+(rated|ranked)\b/i, /\baward[- ]winning\b/i],
     rewrites: ["Certified by a named body, checkable", "Recognized within its category, source named", "Holds a specific, named award", "Officially reviewed, with the reviewer named", "A specific ranking, sourced rather than asserted", "Verified standing, not just self-described"]
   },
   {
@@ -610,7 +644,7 @@ window.MARGINALIA_PRINCIPLES = [
   {
     id: 'institutional-affiliation', name: 'Institutional Affiliation', category: 'trust', reactanceBase: 1,
     mechanism: "Association with a recognized institution transfers some of that institution's credibility to the offer, even without a direct claim about quality.",
-    patterns: [/\bas\s+(seen|featured)\s+(in|on)\b/i, /\bpartnered\s+with\b/i, /\bofficial\s+partner\b/i, /\bbacked\s+by\b/i],
+    patterns: [/\b(as\s+)?(seen|featured)\s+(in|on)\b/i, /\bpartnered\s+with\b/i, /\bofficial\s+partner\b/i, /\bbacked\s+by\b/i],
     rewrites: ["Featured by name, linked for verification", "A named partnership, checkable directly", "Affiliated with a specifically named organisation", "Backing named directly, not vaguely implied", "Coverage linked, not just claimed in passing", "A specific, named, verifiable affiliation"]
   },
 
@@ -1144,7 +1178,7 @@ window.MARGINALIA_PRINCIPLES = [
 
   function buildSummary(allMatches, selected, density, gaps) {
     if (allMatches.length === 0) {
-      return "No clearly-matched persuasion techniques were detected in this copy — either it's written in a fairly neutral, informational register, or it uses phrasing outside this engine's current pattern library.";
+      return "No persuasion techniques matched this specific text. This engine looks for known patterns — pricing and guarantees, urgency and scarcity, customer counts and testimonials, comparisons, identity appeals — so it works best on copy that's actually trying to sell or convince someone of something: an ad, a landing page, a checkout page, a cold email, a fundraising pitch. Plainly informational text (a news snippet, a product spec sheet, a neutral description) often won't trigger anything, and that's a correct result, not a failure. Try the buttons above for a sense of what a rich match looks like.";
     }
     const counts = {};
     allMatches.forEach(m => { counts[m.principle.category] = (counts[m.principle.category] || 0) + 1; });
@@ -1159,6 +1193,8 @@ window.MARGINALIA_PRINCIPLES = [
 
     if (highRisk > 0) out += `${highRisk} of the flagged line${highRisk === 1 ? '' : 's'} carr${highRisk === 1 ? 'ies' : 'y'} a higher risk of reading as pushy to a skeptical reader. `;
     else out += "None of the flagged lines score as especially high-risk on their own. ";
+
+    if (allMatches.length <= 2) out += "Only a couple of cues matched here — if you paste in the fuller piece (the whole ad or landing page, not just a line), there's usually more for the engine to find. ";
 
     if (gaps.length) out += `Worth considering: ${gaps.map(g => g.technique).join(', ')}.`;
     return out.trim();
@@ -1198,23 +1234,27 @@ window.MARGINALIA_PRINCIPLES = [
 const copyInput = document.getElementById('copyInput');
 const charCount = document.getElementById('charCount');
 const analyzeBtn = document.getElementById('analyzeBtn');
-const exampleBtn = document.getElementById('exampleBtn');
+const exampleButtons = [
+  { el: document.getElementById('exampleEcom'), text: "Only 47 left in stock, and almost sold out at this price. Over 12,000 customers have already made the switch, and 94% say they'd never go back to their old routine. Limited time offer — lock in founder pricing before it's gone." },
+  { el: document.getElementById('exampleSaas'), text: "Start your free trial — no credit card required, cancel anytime. Join 12,500+ users already shipping faster. Backed by a 30-day money-back guarantee, and it's less than a coffee a day. Trusted by 500+ businesses, #1 rated in customer satisfaction." },
+  { el: document.getElementById('exampleCourse'), text: "Backed by board-certified experts and featured in Forbes, this program is built for people who refuse to settle for average. This is not for everyone, but if you're ready to unlock your best self, act now — just $29 a month, less than a coffee a day." }
+];
 const loadingState = document.getElementById('loadingState');
 const errorBox = document.getElementById('errorBox');
 const inputPanel = document.getElementById('inputPanel');
 const results = document.getElementById('results');
 const resetBtn = document.getElementById('resetBtn');
 
-const EXAMPLE_COPY = "Only 47 left in stock — and at this price, we can't promise it'll last the week. Over 12,000 customers have already made the switch, and 94% say they'd never go back to their old routine. Join them today and lock in founder pricing before it disappears for good.";
-
 copyInput.addEventListener('input', () => {
   charCount.textContent = copyInput.value.length + ' / 4000';
 });
 
-exampleBtn.addEventListener('click', () => {
-  copyInput.value = EXAMPLE_COPY;
-  charCount.textContent = copyInput.value.length + ' / 4000';
-  runAnalysis();
+exampleButtons.forEach(({ el, text }) => {
+  el.addEventListener('click', () => {
+    copyInput.value = text;
+    charCount.textContent = copyInput.value.length + ' / 4000';
+    runAnalysis();
+  });
 });
 
 analyzeBtn.addEventListener('click', runAnalysis);
@@ -1232,14 +1272,18 @@ function escapeHtml(str){
   return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
+function setControlsDisabled(disabled){
+  analyzeBtn.disabled = disabled;
+  exampleButtons.forEach(({ el }) => { el.disabled = disabled; });
+}
+
 function runAnalysis(){
   const text = copyInput.value.trim();
   if(!text){ copyInput.focus(); return; }
 
   errorBox.classList.remove('active');
   loadingState.classList.add('active');
-  analyzeBtn.disabled = true;
-  exampleBtn.disabled = true;
+  setControlsDisabled(true);
 
   // A brief pause so the loading state is visible — the analysis itself is
   // synchronous and near-instant since it all runs locally, no network involved.
@@ -1255,8 +1299,7 @@ function runAnalysis(){
       errorBox.classList.add('active');
     } finally {
       loadingState.classList.remove('active');
-      analyzeBtn.disabled = false;
-      exampleBtn.disabled = false;
+      setControlsDisabled(false);
     }
   }, 350);
 }
