@@ -509,6 +509,8 @@
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="engine/principles-data.js"></script>
+<script src="engine/engine.js"></script>
 <script>
 const copyInput = document.getElementById('copyInput');
 const charCount = document.getElementById('charCount');
@@ -547,7 +549,7 @@ function escapeHtml(str){
   return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
-async function runAnalysis(){
+function runAnalysis(){
   const text = copyInput.value.trim();
   if(!text){ copyInput.focus(); return; }
 
@@ -556,58 +558,24 @@ async function runAnalysis(){
   analyzeBtn.disabled = true;
   exampleBtn.disabled = true;
 
-  const prompt = `You are a behavioural science analyst auditing a piece of marketing or persuasive copy that a professional pasted into an audit tool. Analyze ONLY the copy given below. Identify the persuasion and behavioural-science techniques actually at work in it.
-
-COPY TO ANALYZE:
-"""
-${text}
-"""
-
-For each technique you find (report at most 6, the most salient ones — quality over completeness):
-- name: the standard behavioural science name (e.g. Scarcity, Social Proof, Anchoring, Loss Aversion, Authority, Reciprocity, Commitment and Consistency, Framing Effect, Decoy Effect, Urgency, Endowment Effect, Default Effect, Bandwagon Effect)
-- quote: the exact short phrase from the copy (word-for-word, under 12 words) that shows this technique
-- mechanism: one plain sentence on how it works psychologically
-- reactance_risk: "low", "medium", or "high" — how likely a skeptical, savvy reader is to feel manipulated by THIS SPECIFIC INSTANCE (not the technique in the abstract; consider how overt or heavy-handed the wording is)
-- reactance_note: one short sentence explaining the reactance_risk rating
-- alternatives: exactly 2 short alternate phrasings for that same spot in the copy. Alternative 1 should keep the same technique but soften its intensity. Alternative 2 should swap to a different, gentler technique. Do not claim either performs better — just offer them as different options.
-
-Also assess:
-- density: level ("low", "medium", or "high") for how compressed/stacked the techniques are overall, plus a one-sentence note on what that stacking might do to a skeptical reader
-- gaps: up to 3 well-established techniques NOT present in the copy that could be worth testing. For each, give "technique" and a one-sentence "note" framed exploratively (e.g. "could be worth testing" not "will improve results")
-- summary: 2-3 plain sentences, no hype, no performance promises, just an honest read of what's going on in this copy
-
-Respond with ONLY a valid JSON object, no markdown code fences, no text before or after, matching exactly this shape:
-{"techniques":[{"name":"","quote":"","mechanism":"","reactance_risk":"","reactance_note":"","alternatives":["",""]}],"density":{"level":"","note":""},"gaps":[{"technique":"","note":""}],"summary":""}`;
-
-  try{
-    const response = await fetch("/.netlify/functions/analyze", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt })
-    });
-
-    if(!response.ok){
-      throw new Error("The request didn't go through (status " + response.status + ").");
+  // A brief pause so the loading state is visible — the analysis itself is
+  // synchronous and near-instant since it all runs locally, no network involved.
+  setTimeout(() => {
+    try{
+      const parsed = window.MarginaliaEngine.analyze(text);
+      renderResults(text, parsed);
+      inputPanel.style.display = 'none';
+      results.classList.add('active');
+      window.scrollTo({top: 0, behavior: 'smooth'});
+    } catch(err){
+      errorBox.textContent = "Couldn't complete that read: " + err.message + " — try again.";
+      errorBox.classList.add('active');
+    } finally {
+      loadingState.classList.remove('active');
+      analyzeBtn.disabled = false;
+      exampleBtn.disabled = false;
     }
-
-    const data = await response.json();
-    const textBlocks = (data.content || []).filter(b => b.type === "text").map(b => b.text).join("\n");
-    const cleaned = textBlocks.replace(/```json/g, "").replace(/```/g, "").trim();
-    const parsed = JSON.parse(cleaned);
-
-    renderResults(text, parsed);
-    inputPanel.style.display = 'none';
-    results.classList.add('active');
-    window.scrollTo({top: 0, behavior: 'smooth'});
-
-  } catch(err){
-    errorBox.textContent = "Couldn't complete that read: " + err.message + " — try again in a moment.";
-    errorBox.classList.add('active');
-  } finally {
-    loadingState.classList.remove('active');
-    analyzeBtn.disabled = false;
-    exampleBtn.disabled = false;
-  }
+  }, 350);
 }
 
 let lastOriginalText = '';
