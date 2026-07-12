@@ -32,8 +32,40 @@
     padding:0 20px 80px;
   }
   .wrap{max-width:980px;margin:0 auto;}
+  .byline{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    flex-wrap:wrap;
+    padding-top:22px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    color:var(--ink-soft);
+  }
+  .byline-socials{
+    display:flex;
+    gap:8px;
+  }
+  .social-btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:28px;
+    height:28px;
+    border:1px solid var(--rule);
+    border-radius:5px;
+    color:var(--ink-soft);
+    text-decoration:none;
+    transition:border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+  }
+  .social-btn:hover{
+    border-color:var(--teal);
+    color:var(--teal);
+    background:var(--teal-tint);
+  }
+  .social-btn svg{ width:14px; height:14px; }
   header{
-    padding:56px 0 28px;
+    padding:20px 0 28px;
     border-bottom:1px solid var(--rule);
     margin-bottom:40px;
   }
@@ -452,6 +484,18 @@
 <body>
 <div class="wrap">
 
+  <div class="byline">
+    <span>Marginalia by Khushi Nagpal</span>
+    <span class="byline-socials">
+      <a class="social-btn" href="https://linkedin.com/in/khushi-nagpal-1214k00" target="_blank" rel="noopener" aria-label="Khushi Nagpal on LinkedIn" title="LinkedIn">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M4.98 3.5C4.98 4.88 3.88 6 2.5 6S0 4.88 0 3.5 1.12 1 2.5 1s2.48 1.12 2.48 2.5zM.22 8.5h4.56V23H.22V8.5zM8.19 8.5h4.37v1.98h.06c.61-1.15 2.1-2.36 4.32-2.36 4.62 0 5.47 3.04 5.47 6.99V23h-4.56v-6.98c0-1.67-.03-3.81-2.32-3.81-2.33 0-2.69 1.82-2.69 3.7V23H8.19V8.5z"/></svg>
+      </a>
+      <a class="social-btn" href="https://instagram.com/khushi_2point0" target="_blank" rel="noopener" aria-label="Khushi Nagpal on Instagram" title="@khushi_2point0">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.3" cy="6.7" r="1.1" fill="currentColor" stroke="none"/></svg>
+      </a>
+    </span>
+  </div>
+
   <header>
     <div class="eyebrow">A persuasion audit, not a copy generator</div>
     <h1>Margin<em>alia</em></h1>
@@ -778,7 +822,7 @@ window.MARGINALIA_PRINCIPLES = [
   {
     id: 'peak-end-framing', name: 'Peak-End Framing', category: 'identity-emotion', reactanceBase: 1,
     mechanism: "People judge an experience largely by its most intense point and its ending, so emphasizing a strong final benefit shapes overall impression more than what precedes it.",
-    patterns: [/\band\s+that's\s+not\s+all\b/i, /\bbest\s+part\?\b/i, /\bsave\s+the\s+best\s+for\s+last\b/i],
+    patterns: [/\band\s+that's\s+not\s+all\b/i, /\bbest\s+part\?/i, /\bsave\s+the\s+best\s+for\s+last\b/i],
     rewrites: ["All the details matter equally here", "No single 'best part' framing applied", "Everything listed with roughly equal weight", "The whole picture, not just a climactic ending", "Details presented without an engineered closing beat", "Balanced presentation, start to finish"]
   },
   {
@@ -864,7 +908,7 @@ window.MARGINALIA_PRINCIPLES = [
   {
     id: 'simplicity-framing', name: 'Simplicity Framing', category: 'value-framing', reactanceBase: 0,
     mechanism: "Reducing an apparently complex decision to a single simple choice lowers the mental effort required to decide, independent of whether the underlying choice is actually simple.",
-    patterns: [/\bjust\s+one\s+(decision|choice|click)\b/i, /\bno\s+need\s+to\s+compare\b/i],
+    patterns: [/\bjust\s+one\s+(\w+\s+)?(decision|choice|click)\b/i, /\bno\s+need\s+to\s+compare\b/i],
     rewrites: ["Here are the options, laid out for comparison", "A few factors worth weighing, listed plainly", "What differs between the choices, spelled out", "The comparison, made easy to actually do", "Options presented so you can compare them properly", "The relevant differences, not flattened into 'just pick'"]
   },
   {
